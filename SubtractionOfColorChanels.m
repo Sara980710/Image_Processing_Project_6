@@ -2,8 +2,7 @@ close all
 clc
 clear
 
-
-im = getImage(2,4);
+im = getImage(1,2); % max: 4,3
 figure, imshow(im, [])
 title('original image')
 
@@ -49,7 +48,7 @@ title('B-R')
 figure, imshow(Gmag, [])
 title('Gradient magnitude')
 
-% Convert to binary with thresholding: building
+% Convert to binary with thresholding
 GmagBinary = Gmag > 0.2*max(Gmag(:));
 figure, imshow(GmagBinary, [])
 title('binary')
@@ -64,17 +63,32 @@ GmagBinary = bwareaopen(GmagBinary,10);
 figure, imshow(GmagBinary, [])
 title('Only big dotts')
 
+% Use the mask in the inpaint function to remove masked areas
+res = inpaintExemplar(im, GmagBinary,'FillOrder','tensor','PatchSize',7);
+figure
+subplot(1,3,1), imshow(im, [])
+title('Original')
+subplot(1,3,2), imshow(res, [])
+title('Result inpaint')
+
 % Smooth image
-maskImage = GmagBinary
-medfilimgR = medfilt2(R, [10,10]);
-medfilimgG = medfilt2(G, [10,10]);
-medfilimgB = medfilt2(B, [10,10]);
+maskImage = GmagBinary;
+medfilimgR = R;
+medfilimgG = G;
+medfilimgB = B;
+sizeR = 10;
+sizeC = 10;
+for i=1:1
+medfilimgR = medfilt2(medfilimgR, [sizeR,sizeC]);
+medfilimgG = medfilt2(medfilimgG, [sizeR,sizeC]);
+medfilimgB = medfilt2(medfilimgB, [sizeR,sizeC]);
+end
 R(maskImage) = medfilimgR(maskImage);
 G(maskImage) = medfilimgG(maskImage);
 B(maskImage) = medfilimgB(maskImage);
+
 im(:,:,1) = R;
 im(:,:,2) = G;
 im(:,:,3) = B;
-
-figure, imshow(im, [])
-title('Result')
+subplot(1,3,3), imshow(im, [])
+title('Result median inpaint')
